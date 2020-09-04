@@ -2,6 +2,7 @@
 #include "Win32Console.hpp"
 #include <cstdio>
 #include "vktable.h"
+#include "Finally.hpp"
 
 namespace {
   constexpr ULONG_PTR DUMMY_SEND_FLAG = 0x1;
@@ -27,6 +28,10 @@ namespace {
 
   bool lastShiftWhenControlPressed = false;
 
+  bool _lshift = getPressState(VK_LSHIFT);
+  bool _lctrl = getPressState(VK_LCONTROL);
+  bool _lalt = getPressState(VK_LMENU);
+
   LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode < 0) goto CALL_NEXT_HOOK;
 
@@ -36,6 +41,18 @@ namespace {
     if (kb->dwExtraInfo & US_INJECTED_FLAG) goto CALL_NEXT_HOOK;
     if (kb->dwExtraInfo & SPACE_INJECTED_FLAG) goto CALL_NEXT_HOOK;
     if (kb->dwExtraInfo & CONV_INJECTED_FLAG) goto CALL_NEXT_HOOK;
+    {
+    sendKey(VK_LSHIFT, 44, _lshift, DUMMY_SEND_FLAG);
+    sendKey(VK_LCONTROL, 58, _lctrl, DUMMY_SEND_FLAG);
+    sendKey(VK_LMENU, 58, _lalt, DUMMY_SEND_FLAG);
+    auto for_msime = finally([]() {
+      _lshift = getPressState(VK_LSHIFT);
+      _lctrl = getPressState(VK_LCONTROL);
+      _lalt = getPressState(VK_LMENU);
+      sendKey(VK_LSHIFT, 44, false, DUMMY_SEND_FLAG);
+      sendKey(VK_LCONTROL, 58, false, DUMMY_SEND_FLAG);
+      sendKey(VK_LMENU, 58, false, DUMMY_SEND_FLAG);
+    });
     switch (kb->vkCode) {
       case VK_LCONTROL:
         {
@@ -83,6 +100,7 @@ namespace {
       case 14: // backspace
         sendKey(VK_OEM_5, kb->scanCode, pressed);
         return -1;
+    }
     }
 CALL_NEXT_HOOK:
     return CallNextHookEx(0, nCode, wParam, lParam);
