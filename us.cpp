@@ -59,34 +59,18 @@ namespace {
         bool shift = getPressState(VK_LSHIFT);
         bool control = getPressState(VK_LCONTROL);
         if (pressed && !control) lastShiftWhenControlPressed = shift;
-        if (!getPressState(VK_LCONTROL))
-          sendKey(VK_LCONTROL, kb->scanCode, false, DUMMY_SEND_FLAG);
-
-        if (!pressed) sendKey(VK_LSHIFT, 44, lastShiftWhenControlPressed, DUMMY_SEND_FLAG);
-        else if (shift) sendKey(VK_LSHIFT, 44, true, DUMMY_SEND_FLAG);
-
         sendKey(VK_CAPITAL, kb->scanCode, pressed);
-
-        if (shift)
-          sendKey(VK_LSHIFT, 44, true, DUMMY_SEND_FLAG);
-        sendKey(VK_LCONTROL, kb->scanCode, false, DUMMY_SEND_FLAG);
-
-
         return -1;
         }
       case VK_LSHIFT:
       case VK_SHIFT:
         sendKey(kb->vkCode, kb->scanCode, pressed);
-        if (pressed) sendKey(kb->vkCode, kb->scanCode, false, DUMMY_SEND_FLAG);
         return -1;
     }
     switch (kb->scanCode) {
       case 58: // caps lock
-        if (pressed && getPressState(VK_SHIFT))
-          sendKey(VK_SHIFT, 44, false, DUMMY_SEND_FLAG);
         if (getPressState(VK_LCONTROL) != pressed)
           sendKey(VK_LCONTROL, 58, pressed);
-        sendKey(VK_LCONTROL, 58, false, DUMMY_SEND_FLAG);
         return -1;
       case 125: //jis: yen/pipe
         sendKey(VK_BACK, kb->scanCode, pressed);
