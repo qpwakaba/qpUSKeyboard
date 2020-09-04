@@ -25,6 +25,8 @@ namespace {
     return (GetKeyState(vk) & 0x8000) != 0;
   }
 
+  bool lastShiftWhenControlPressed = false;
+
   LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode < 0) goto CALL_NEXT_HOOK;
 
@@ -36,21 +38,25 @@ namespace {
     if (kb->dwExtraInfo & CONV_INJECTED_FLAG) goto CALL_NEXT_HOOK;
     switch (kb->vkCode) {
       case VK_LCONTROL:
+        {
+        bool shift = getPressState(VK_LSHIFT);
+        bool control = getPressState(VK_LCONTROL);
+        if (pressed && !control) lastShiftWhenControlPressed = shift;
         if (!getPressState(VK_LCONTROL))
           sendKey(VK_LCONTROL, kb->scanCode, false, DUMMY_SEND_FLAG);
-        if (getPressState(VK_LSHIFT))
-          sendKey(VK_LSHIFT, 44, true, DUMMY_SEND_FLAG);
 
+        if (!pressed) sendKey(VK_LSHIFT, 44, lastShiftWhenControlPressed, DUMMY_SEND_FLAG);
+        else if (shift) sendKey(VK_LSHIFT, 44, true, DUMMY_SEND_FLAG);
 
         sendKey(VK_CAPITAL, kb->scanCode, pressed);
 
-
-        if (getPressState(VK_LSHIFT))
+        if (shift)
           sendKey(VK_LSHIFT, 44, true, DUMMY_SEND_FLAG);
         sendKey(VK_LCONTROL, kb->scanCode, false, DUMMY_SEND_FLAG);
 
 
         return -1;
+        }
       case VK_LSHIFT:
       case VK_SHIFT:
         sendKey(kb->vkCode, kb->scanCode, pressed);
