@@ -32,6 +32,8 @@ namespace {
   bool _lctrl = getPressState(VK_LCONTROL);
   bool _lalt = getPressState(VK_LMENU);
 
+  bool usEnabled = true;
+
   LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode < 0) goto CALL_NEXT_HOOK;
 
@@ -41,6 +43,10 @@ namespace {
     if (kb->dwExtraInfo & US_INJECTED_FLAG) goto CALL_NEXT_HOOK;
     if (kb->dwExtraInfo & SPACE_INJECTED_FLAG) goto CALL_NEXT_HOOK;
     if (kb->dwExtraInfo & CONV_INJECTED_FLAG) goto CALL_NEXT_HOOK;
+
+    if (kb->vkCode == VK_PAUSE && pressed && getPressState(VK_LSHIFT))
+          usEnabled = !usEnabled;
+    if (!usEnabled) goto CALL_NEXT_HOOK;
     {
     sendKey(VK_LSHIFT, 44, _lshift, DUMMY_SEND_FLAG);
     sendKey(VK_LCONTROL, 58, _lctrl, DUMMY_SEND_FLAG);
@@ -66,6 +72,11 @@ namespace {
       case VK_SHIFT:
         sendKey(kb->vkCode, kb->scanCode, pressed);
         return -1;
+      case VK_PAUSE:
+        {
+        
+        break;
+        }
     }
     switch (kb->scanCode) {
       case 58: // caps lock

@@ -49,7 +49,10 @@ namespace {
     if (kb->dwExtraInfo & DUMMY_SEND_FLAG) return -1;
     if (kb->dwExtraInfo & CONV_INJECTED_FLAG) goto CALL_NEXT_HOOK;
 
-    if (kb->scanCode == 121 /* CONVERT */) {
+    if (kb->scanCode == 123 /* NO_CONVERT */) {
+      sendKey(VK_NONCONVERT, 123, pressed);
+      return -1;
+    } else if (kb->scanCode == 121 /* CONVERT */) {
       conv = pressed;
       if (pressed) {
         someKeyPressed = false;

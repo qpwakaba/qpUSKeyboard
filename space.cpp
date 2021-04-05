@@ -97,7 +97,7 @@ namespace {
   }
 
   unsigned int GetSpaceDelay() {
-    return GetDoubleClickTime() / 4;
+    return GetDoubleClickTime() / 8;
   }
 
   constexpr size_t tstrlen(const TCHAR* str) {
@@ -109,14 +109,14 @@ namespace {
   const size_t Minecraft_len = tstrlen(_T("Minecraft"));
   const TCHAR* Minecraft_1 = _T("Minecraft 1");
   const size_t Minecraft_1_len = tstrlen(_T("Minecraft 1"));
+  const TCHAR* Minecraft__1 = _T("Minecraft* 1");
+  const size_t Minecraft__1_len = tstrlen(_T("Minecraft* 1"));
 
-  bool startsWith(const TCHAR* str, const TCHAR* target, size_t length) {
-    for (size_t i = 0; i < length; ++i) {
-      if (target[i] == 0) return true;
-      if (str[i] == 0) return false;
-      if (str[i] != target[i]) return false;
-    }
-    return true;
+  bool startsWith(const TCHAR* str, const TCHAR* target) {
+    if (*target == 0) return true;
+    if (*str == 0) return false;
+    if (*str != *target) return false;
+    return startsWith(str + 1, target + 1);
   }
 
   bool equals(const TCHAR* x, const TCHAR* y) {
@@ -127,12 +127,13 @@ namespace {
 
   bool isIgnoreApplication() {
     HWND active = GetForegroundWindow();
-    TCHAR text[Minecraft_1_len + 1];
-    size_t read = GetWindowText(active, text, Minecraft_1_len + 1);
+    TCHAR text[Minecraft__1_len + 1];
+    size_t read = GetWindowText(active, text, Minecraft__1_len + 1);
     if (equals(text, Minecraft)) return true;
-    return startsWith(text, Minecraft_1, Minecraft_1_len);
+    return startsWith(text, Minecraft_1) || startsWith(text, Minecraft__1);
   }
 
+  constexpr bool supportDelayInput = false;
   bool space = false;
   ULONGLONG spaceLast = 0;
   bool spaceLastFlag = false;
@@ -170,7 +171,7 @@ namespace {
         callNextHook = true;
         if (firstInputVK > 0) {
           repeating = 0;
-          if (GetTickCount() - spaceLast < 1.2 * GetSpaceDelay()) {
+          if (supportDelayInput && (GetTickCount() - spaceLast < 1.2 * GetSpaceDelay())) {
             //スペース→文字→スペース離し
             SendKey(VK_SPACE, true);
             SendKey(firstInputVK, firstInputSC, true);

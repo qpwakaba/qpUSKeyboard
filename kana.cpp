@@ -52,6 +52,7 @@ namespace {
 
     if (kb->scanCode == 112 /* KANA */) {
         sendKey(VK_F24, 112, pressed);
+        return 1;
     }
 
 
