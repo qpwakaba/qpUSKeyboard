@@ -40,7 +40,10 @@ namespace {
   }
 
   bool conv = false;
+  bool convWhenTheKeyPressed = false;
   bool someKeyPressed = false;
+  WORD pressedVk = 0;
+  WORD pressedSc = 0;
   LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode < 0) goto CALL_NEXT_HOOK;
 
@@ -56,21 +59,47 @@ namespace {
       conv = pressed;
       if (pressed) {
         someKeyPressed = false;
-      } else if (!someKeyPressed) {
+      } else {
         sendKey(VK_CONVERT, 121, true);
         sendKey(VK_CONVERT, 121, false);
+        if (someKeyPressed && pressedVk != 0) {
+          sendKey(pressedVk, pressedSc, true);
+          pressedVk = 0;
+          pressedSc = 0;
+        }
       }
       return -1;
     } else if (pressed && conv) {
       someKeyPressed = true;
       if (isIgnoreVK(kb->vkCode)) goto CALL_NEXT_HOOK;
       if (!getPressState(VK_CONTROL)) {
-        sendKey(VK_LCONTROL, 0, true);
-        sendKey(kb->vkCode, kb->scanCode, true);
-        sendKey(VK_LCONTROL, 0, false);
+        convWhenTheKeyPressed = true;
+        pressedVk = kb->vkCode;
+        pressedSc = kb->scanCode;
       } else
         sendKey(kb->vkCode, kb->scanCode, true);
       return -1;
+    } else if (conv && convWhenTheKeyPressed && pressedVk != 0) {
+      sendKey(VK_LCONTROL, 0, true);
+      sendKey(pressedVk, pressedSc, true);
+      sendKey(VK_LCONTROL, 0, false);
+      if (!pressed && kb->vkCode == pressedVk && kb->scanCode == pressedSc) {
+        pressedVk = 0;
+        pressedSc = 0;
+        goto CALL_NEXT_HOOK;
+      }
+      if (kb->vkCode != pressedVk || kb->scanCode != pressedSc) {
+        sendKey(VK_LCONTROL, 0, true);
+        sendKey(pressedVk, pressedSc, true);
+        sendKey(VK_LCONTROL, 0, false);
+        if (pressed) {
+          pressedVk = kb->vkCode;
+          pressedSc = kb->scanCode;
+        } else {
+          pressedVk = 0;
+          pressedSc = 0;
+        }
+      }
     }
 
     if (!pressed) goto CALL_NEXT_HOOK;

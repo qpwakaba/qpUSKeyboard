@@ -10,6 +10,10 @@ namespace {
   constexpr ULONG_PTR SPACE_INJECTED_FLAG = 0x4;
   constexpr ULONG_PTR CONV_INJECTED_FLAG = 0x8;
 
+  WORD getScancodeFromVk(WORD vk) {
+    return (WORD)MapVirtualKeyW(vk, MAPVK_VK_TO_VSC_EX);
+  }
+
   void sendKey(WORD vk, WORD sc, bool pressed, ULONG_PTR extraInfo = US_INJECTED_FLAG) {
     INPUT input = {};
     input.type = INPUT_KEYBOARD;
@@ -20,6 +24,10 @@ namespace {
     if (!(extraInfo & DUMMY_SEND_FLAG))
       _tprintf(_T("%02X, %03X, %d, %s\n"), sc, extraInfo, pressed, vkname(vk));
     SendInput(1, &input, sizeof(INPUT));
+  }
+
+  void sendKey(WORD vk, bool pressed, ULONG_PTR extraInfo = US_INJECTED_FLAG) {
+    sendKey(vk, getScancodeFromVk(vk), pressed, extraInfo);
   }
 
   bool getPressState(WORD vk) {
@@ -65,12 +73,12 @@ namespace {
         bool shift = getPressState(VK_LSHIFT);
         bool control = getPressState(VK_LCONTROL);
         if (pressed && !control) lastShiftWhenControlPressed = shift;
-        sendKey(VK_CAPITAL, kb->scanCode, pressed);
+        sendKey(VK_CAPITAL, pressed);
         return -1;
         }
       case VK_LSHIFT:
       case VK_SHIFT:
-        sendKey(kb->vkCode, kb->scanCode, pressed);
+        sendKey(kb->vkCode, pressed);
         return -1;
       case VK_PAUSE:
         {
@@ -81,19 +89,19 @@ namespace {
     switch (kb->scanCode) {
       case 58: // caps lock
         if (getPressState(VK_LCONTROL) != pressed)
-          sendKey(VK_LCONTROL, 58, pressed);
+          sendKey(VK_LCONTROL, pressed);
         return -1;
       case 125: //jis: yen/pipe
-        sendKey(VK_BACK, kb->scanCode, pressed);
+        sendKey(VK_BACK, pressed);
         return -1;
       case 115: // jis:backslash/underscore
-        sendKey(VK_RSHIFT, kb->scanCode, pressed);
+        sendKey(VK_RSHIFT, pressed);
         return -1;
       case 43: // us: \|
-        sendKey(VK_BACK, kb->scanCode, pressed);
+        sendKey(VK_BACK, pressed);
         return -1;
       case 14: // backspace
-        sendKey(VK_OEM_5, kb->scanCode, pressed);
+        sendKey(VK_OEM_5, pressed);
         return -1;
     }
     }

@@ -97,7 +97,7 @@ namespace {
   }
 
   unsigned int GetSpaceDelay() {
-    return GetDoubleClickTime() / 8;
+    return GetDoubleClickTime() / 2;
   }
 
   constexpr size_t tstrlen(const TCHAR* str) {
